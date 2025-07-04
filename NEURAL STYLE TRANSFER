@@ -1,0 +1,41 @@
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torchvision import transforms, models
+from PIL import Image
+import matplotlib.pyplot as plt
+
+# --- Helper Functions ---
+
+def image_loader(image_name, imsize=512, device='cpu'):
+    loader = transforms.Compose([
+        transforms.Resize(imsize),  # scale imported image
+        transforms.CenterCrop(imsize),
+        transforms.ToTensor()])  # transform it into a torch tensor
+    image = Image.open(image_name)
+    image = loader(image).unsqueeze(0)
+    return image.to(device, torch.float)
+
+def imshow(tensor, title=None):
+    image = tensor.cpu().clone()
+    image = image.squeeze(0)
+    image = transforms.ToPILImage()(image)
+    plt.imshow(image)
+    if title is not None:
+        plt.title(title)
+    plt.axis('off')
+    plt.show()
+
+# --- Content and Style Loss Classes ---
+
+class ContentLoss(nn.Module):
+    def _init_(self, target):
+        super(ContentLoss, self)._init_()
+        self.target = target.detach()
+    def forward(self, input):
+        self.loss = nn.functional.mse_loss(input, self.target)
+        return input
+
+def gram_matrix(input):
+    b, c, h, w = input.size()
+    features = input.view
